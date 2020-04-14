@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 const Schema = mongoose.Schema;
-const walletSchema = new Schema(
+const transactionSchema = new Schema(
   {
     userId: {
       type: Schema.Types.ObjectId,
@@ -21,4 +21,4 @@ const walletSchema = new Schema(
   { timestamps: true },
 );
 
-export default mongoose.model("Transactions", walletSchema);
+export default mongoose.model("Transactions", transactionSchema);

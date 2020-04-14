@@ -1,0 +1,15 @@
+.bd{
+    border-radius: 13px 13px 13px 0px !important;  
+    height: 52vh !important;  
+}
+
+.input-style{
+    border-radius: 13px !important;
+    padding: 2rem 0.5rem !important;
+}
+.input-style-btn{
+    border-radius: 13px !important;
+    padding: 1.5rem 0.5rem !important;
+    font-size: 700;
+    letter-spacing: 3px;
+}

@@ -19,7 +19,7 @@ router.post("/sign-up", async (req, res, next) => {
   // Generate a 12 random virtual account ID for each user
   let account_id = crypto.randomBytes(6).toString("hex");
 
-  const { email, full_name, password, virtual_account_id = account_id } = req.body;
+  const { email, full_name, password, virtual_account_id = account_id, roleId = "user" } = req.body;
 
   // check if the email coming from the body exist
   let email_exist = await User.findOne({ email });
@@ -29,7 +29,7 @@ router.post("/sign-up", async (req, res, next) => {
   }
 
   // if email doesnt exist, create the user
-  await User.create({ email, full_name, password, virtual_account_id });
+  await User.create({ email, full_name, password, virtual_account_id, roleId });
   req.flash("success_msg", "Registration Successfull");
   return res.redirect("back");
 });
@@ -43,8 +43,17 @@ router.post("/login", async (req, res, next) => {
     }
     req.logIn(user, function (err) {
       if (err) return next(err);
-      return res.send(req.session.id);
-      //return res.redirect("/user/dashboard");
+      switch (req.user.roleId) {
+        case "user":
+          return res.redirect("/user/dashboard");
+          break;
+        case "admin":
+          return res.redirect("/admin/dashboard");
+          break;
+        default:
+          return res.redirect("/user/dashboard");
+          break;
+      }
     });
   })(req, res, next);
 });

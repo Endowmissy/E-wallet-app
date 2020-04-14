@@ -7,10 +7,11 @@ import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import passport from "./config/passport";
 import expressValidator from "express-validator";
-import { PORT, SESSION_SECRET } from "./config/constants";
+import { PORT, SESSION_SECRET, MONGODB_URL } from "./config/constants";
 import index from "./routes/index";
 import transactions from "./routes/transactions";
 import users from "./routes/user";
+import account from "./routes/account";
 const MongoStore = require("connect-mongo")(session);
 
 const app = express();
@@ -27,7 +28,7 @@ const options = {
   };
   
   mongoose
-    .connect(process.env.MONGODB_URL, options)
+    .connect(MONGODB_URL, options)
     .then(() => console.log(`Database connection established`))
     .catch((err) => console.error(`There was an error connecting to database, the err is ${err}`));
 
@@ -46,7 +47,7 @@ app.use(
       maxAge: 1209600000,
     },
     store: new MongoStore({
-      url: process.env.MONGODB_URL,
+      url: MONGODB_URL,
       autoReconnect: true,
     }),
   }),
@@ -62,6 +63,7 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use(index);
 app.use(transactions);
 app.use(users);
+app.use(account);
 
 const port = PORT || 5000;
 

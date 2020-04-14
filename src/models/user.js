@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import bcrypt from "bcryptjs";
+import bcrypt from "bcrypt-nodejs";
 const Schema = mongoose.Schema;
 const userSchema = new Schema(
   {
@@ -27,6 +27,11 @@ const userSchema = new Schema(
     balance: {
       type: Number,
       default: 0,
+    },
+    roleId: {
+      type: String,
+      enum: ["user", "admin"],
+      default: "user",
     },
   },
   {

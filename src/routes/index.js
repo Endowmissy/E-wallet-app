@@ -11,10 +11,9 @@ router.use(async (req, res, next) => {
   next();
 });
 
-router.get("/", (req, res, next) => {
-  res.send("hello world");
-});
-
-router.get("/user/dashboard", (req, res, next) => {});
+router.get("/", (req, res, next) => res.redirect("index"));
+router.get("/sign-up", (req, res, next) => res.render("sign-up"));
+router.get("/login", (req, res, next) => res.render("login"));
+router.get("/log-out", (req, res, next) => res.redirect("/login"));
 
 export default router;

@@ -3,7 +3,7 @@ import { initializePayment, verifyPayment } from "../helpers/paystack";
 import Transaction from "../models/transactions";
 import User from "../models/user";
 import crypto from "crypto";
-import Wallet from "../models/wallet";
+import Wallet from "../models/gift";
 const router = express.Router();
 
 // Funding of wallet
@@ -12,6 +12,12 @@ router.post("/payment/create", async (req, res, next) => {
   const errors = req.validationErrors();
   if (errors) {
     req.flash("success_msg", errors[0].msg);
+    return res.redirect("back");
+  }
+
+  // check if the amount coming from body is less than ₦50
+  if (parseInt(req.body.amount) < 50) {
+    req.flash("success_msg", "The least you can fund your wallet with is ₦50.");
     return res.redirect("back");
   }
 
@@ -24,7 +30,7 @@ router.post("/payment/create", async (req, res, next) => {
 
   let payment_gateway_response = await initializePayment(paystack_data);
 
-  let transation_payload = {
+  let transaction_payload = {
     userId: req.user.id,
     amount: parseInt(req.body.amount),
     status: "pending",
@@ -32,7 +38,7 @@ router.post("/payment/create", async (req, res, next) => {
     access_code: payment_gateway_response.data.access_code,
   };
 
-  await Transaction.create(transation_payload);
+  await Transaction.create(transaction_payload);
   if (payment_gateway_response) res.redirect(301, payment_gateway_response.data.authorization_url);
 });
 
@@ -64,13 +70,15 @@ router.get("/payment/verify", async (req, res, next) => {
     req.flash(
       "succes_msg",
       "Transaction Successfully. The amount of " +
-        payment_details.amount +
+        transaction_id.amount +
         " has been funded in your wallet",
     );
-    return res.redirect("back");
+
+    req.flash("success_msg", "Transaction Successfull.");
+    return res.redirect("/user/dashboard");
   } else {
-    req.flash("success_msg", "Payment Unsuccessfull");
-    return res.redirect("back");
+    req.flash("success_msg", "Transaction Unsuccessfull");
+    return res.redirect("/user/dashboard");
   }
 });
 
@@ -84,7 +92,7 @@ router.get("/payment/verify", async (req, res, next) => {
 
 router.post("/transfer/create", async (req, res, next) => {
   // check if the recepient and amount field is not empty
-  req.assert("recepient", "The Recepient field cannot be left empty").notEmpty();
+  req.assert("recepient", "Pls enter the receiver's email or virtual account ID").notEmpty();
   req.assert("amount", "Pls enter the amount you will like to Gift out").notEmpty();
   const errors = req.validationErrors();
   if (errors) {
@@ -92,9 +100,9 @@ router.post("/transfer/create", async (req, res, next) => {
     return res.redirect("back");
   }
 
-  // search the database for the user either with the email or the virtal account id, skip the logged in user
+  // search the database for the user either with the email or the virtal account id, skip the logged in userId (sender ID)
   const { amount, recepient, transaction_remark } = req.body;
-  let receiver = await User.find({
+  let receiver = await User.findOne({
     _id: { $ne: req.user.id },
     $or: [{ email: recepient }, { virtual_account_id: recepient }],
   });
@@ -118,20 +126,24 @@ router.post("/transfer/create", async (req, res, next) => {
     });
 
     let sender_current_balance = await User.findById(req.user.id);
+
+    // Update the Sender's balance
     await User.updateOne(
       { _id: req.user.id },
-      { $set: { balance: sender_current_balance - parseInt(amount) } },
+      { $set: { balance: sender_current_balance.balance - parseInt(amount) } },
     );
 
-    req.flash("success_msg", "Transfer Successfull.");
+    // Update the Receiver's balance
+    await User.updateOne({ _id: receiver._id }, { $inc: { balance: parseInt(amount) } });
+
+    req.flash("success_msg", "Transfer Successful. Your wallet balance has been updated.");
     return res.redirect("back");
   } else {
     req.flash(
       "success_msg",
-      "Insufficient funds. You dont have enough money to make this transfer.",
+      "Insufficient funds. You don't have enough money in your wallet to make this transfer. Try funding your wallet to continue",
     );
     return res.redirect("back");
   }
 });
-
 export default router;
