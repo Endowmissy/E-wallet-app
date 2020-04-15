@@ -30,7 +30,7 @@ router.post("/sign-up", async (req, res, next) => {
 
   // if email doesnt exist, create the user
   await User.create({ email, full_name, password, virtual_account_id, roleId });
-  req.flash("success_msg", "Registration Successfull");
+  req.flash("success_msg", "Registration Successful");
   return res.redirect("back");
 });
 
@@ -38,7 +38,7 @@ router.post("/login", async (req, res, next) => {
   passport.authenticate("local", function (err, user, info) {
     if (err) return next(err);
     if (!user) {
-      req.flash("success_msg", "Incorect Email or password");
+      req.flash("success_msg", "Incorrect Email or password");
       return res.redirect("back");
     }
     req.logIn(user, function (err) {
